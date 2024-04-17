@@ -1,0 +1,15 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended", ":disableDependencyDashboard"],
+  prHourlyLimit: 0,
+  separateMinorPatch: true,
+  stabilityDays: 1,
+  pinDigests: true,
+  packageRules: [
+    {
+      description: "Schedule digest updates weekly",
+      matchUpdateTypes: ["digest"],
+      schedule: ["every 7 days"],
+    },
+  ],
+}

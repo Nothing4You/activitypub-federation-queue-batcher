@@ -1,0 +1,71 @@
+[project]
+name = "activitypub-federation-queue-batcher"
+version = "0.1.0"
+description = "External ActivityPub federation queue and batching service to deal with sequential federation over high latency connections"
+authors = [
+    {name = "Richard Schwab", email = "pythonactivitypu-68vz7cab4n@richardschwab.de"},
+]
+dependencies = [
+    "aiohttp[speedups]>=3.9.4",
+    "aio-pika>=9.4.1",
+    "dataclasses-json>=0.6.4",
+]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "AGPL-3.0-only"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.scripts]
+inbox-receiver = "python -m activitypub_federation_queue_batcher.inbox_receiver"
+batch-sender = "python -m activitypub_federation_queue_batcher.batch_sender"
+batch-receiver = "python -m activitypub_federation_queue_batcher.batch_receiver"
+
+[tool.ruff]
+# Same as Black.
+line-length = 88
+indent-width = 4
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = ["ALL"]
+
+extend-ignore = [
+    # TODOs
+    "D", # TODO: Docs might be useful at some point
+    "FIX002", # TODOs are allowed
+    "TD002", # TODOs do not need to be assigned to someone
+    "TD003", # TODOs do not need an issue linked
+
+    # Deprecated rules
+    "ANN101",
+    "ANN102",
+
+    # Other ignores
+    "EM", # Don't mind duplicate error messages in tracebacks
+    "ERA001", # Prone to false positives
+    "ISC001", # https://github.com/astral-sh/ruff/issues/8272
+]
+
+[tool.ruff.lint.pylint]
+# Keyword args usually don't cause problems, even if there are many.
+max-args = 20
+max-positional-args = 5

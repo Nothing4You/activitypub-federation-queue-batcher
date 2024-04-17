@@ -1,0 +1,47 @@
+# This compose file is only for local testing
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13.1-management-alpine
+    restart: unless-stopped
+    # we need a persistent hostname ensure rabbitmq keeps using the same storage
+    hostname: rabbitmq
+    ports:
+      - 127.0.0.1:15672:15672
+    volumes:
+      - ./rabbitmq-data:/var/lib/rabbitmq
+
+  inbox-receiver:
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/inbox-receiver:local
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+    environment:
+      LOGLEVEL: debug
+      RABBITMQ_HOSTNAME: rabbitmq
+
+  batch-sender:
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-sender:local
+    restart: unless-stopped
+    environment:
+      LOGLEVEL: debug
+      RABBITMQ_HOSTNAME: rabbitmq
+      BATCH_RECEIVER_PROTOCOL: http
+      BATCH_RECEIVER_DOMAIN: batch-receiver:8080
+      BATCH_RECEIVER_PATH: /batch
+
+  batch-receiver:
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-receiver:local
+    restart: unless-stopped
+    ports:
+      - 8081:8080
+    environment:
+      LOGLEVEL: debug
+      BATCH_RECEIVER_PATH: /batch
+      OVERRIDE_DESTINATION_PROTOCOL: http
+      # OVERRIDE_DESTINATION_DOMAIN: lemmy:8080
+      OVERRIDE_DESTINATION_DOMAIN: nginx
+
+  nginx:
+    image: nginx
+    restart: unless-stopped

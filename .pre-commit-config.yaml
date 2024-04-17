@@ -1,0 +1,49 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: https://github.com/pdm-project/pdm
+    rev: 2.14.0
+    hooks:
+      - id: pdm-lock-check
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.2
+    hooks:
+      - id: pyupgrade
+        args:
+          - --py312-plus
+  - repo: local
+    hooks:
+      - id: prettier
+        name: Prettier
+        language: node
+        entry: prettier
+        args: [--write, --ignore-unknown]
+        types: [file]
+        additional_dependencies:
+          - prettier@3.2.5
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.7
+    hooks:
+      # Run the linter.
+      - id: ruff
+        args:
+          - --fix
+          - --show-fixes
+      # Run the formatter.
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.9.0" # Use the sha / tag you want to point at
+    hooks:
+      - id: mypy
+        args: [--strict, --ignore-missing-imports]
+        additional_dependencies:
+          - aiohttp>=3.9.4
+          - aio-pika>=9.4.1
+          - dataclasses-json>=0.6.4
