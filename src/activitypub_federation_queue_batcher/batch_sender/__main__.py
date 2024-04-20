@@ -20,6 +20,7 @@ from activitypub_federation_queue_batcher.constants import (
     BATCH_RECEIVER_DOMAIN,
     BATCH_RECEIVER_PATH,
     BATCH_RECEIVER_PROTOCOL,
+    HTTP_BATCH_AUTHORIZATION,
     HTTP_BATCH_MAX_WAIT,
     HTTP_BATCH_SIZE,
     HTTP_USER_AGENT,
@@ -108,6 +109,9 @@ async def forwarder() -> None:
         "user-agent": HTTP_USER_AGENT,
         "content-type": "application/json",
     }
+
+    if HTTP_BATCH_AUTHORIZATION is not None:
+        headers["authorization"] = HTTP_BATCH_AUTHORIZATION
 
     async with rmq.channel() as channel, aiohttp.ClientSession() as cs:
         await channel.set_qos(prefetch_count=HTTP_BATCH_SIZE)

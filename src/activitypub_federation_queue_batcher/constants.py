@@ -4,8 +4,17 @@ BATCH_RECEIVER_PROTOCOL = os.environ.get("BATCH_RECEIVER_PROTOCOL", "https")
 BATCH_RECEIVER_DOMAIN = os.environ.get("BATCH_RECEIVER_DOMAIN")
 BATCH_RECEIVER_PATH = os.environ.get("BATCH_RECEIVER_PATH", "/batch")
 
-HTTP_BATCH_SIZE = int(os.environ.get("HTTP_BATCH_SIZE", 100))
+HTTP_BATCH_AUTHORIZATION = os.environ.get("HTTP_BATCH_AUTHORIZATION")
+if (
+    HTTP_BATCH_AUTHORIZATION is not None
+    and not HTTP_BATCH_AUTHORIZATION.lower().startswith(
+        "bearer ",
+    )
+):
+    HTTP_BATCH_AUTHORIZATION = f"Bearer {HTTP_BATCH_AUTHORIZATION}"
+
 HTTP_BATCH_MAX_WAIT = int(os.environ.get("HTTP_BATCH_MAX_WAIT", 3))
+HTTP_BATCH_SIZE = int(os.environ.get("HTTP_BATCH_SIZE", 100))
 HTTP_USER_AGENT = os.environ.get(
     "HTTP_USER_AGENT",
     "ActivityPub-Federation-Queue-Batcher (+https://github.com/Nothing4You/activitypub-federation-queue-batcher)",

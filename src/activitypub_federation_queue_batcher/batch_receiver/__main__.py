@@ -12,6 +12,7 @@ from activitypub_federation_queue_batcher._apub_helpers import (
 from activitypub_federation_queue_batcher._logging_helpers import setup_logging
 from activitypub_federation_queue_batcher.constants import (
     BATCH_RECEIVER_PATH,
+    HTTP_BATCH_AUTHORIZATION,
     OVERRIDE_DESTINATION_DOMAIN,
     OVERRIDE_DESTINATION_PROTOCOL,
 )
@@ -81,6 +82,12 @@ async def submit(
 
 
 async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
+    if (
+        HTTP_BATCH_AUTHORIZATION is not None
+        and request.headers.getone("authorization") != HTTP_BATCH_AUTHORIZATION
+    ):
+        return aiohttp.web.HTTPUnauthorized(text="Missing authorization header")
+
     body = await request.read()
 
     activities: list[SerializableActivitySubmission] = (
