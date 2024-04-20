@@ -13,7 +13,7 @@ from activitypub_federation_queue_batcher._rmq_helpers import (
     declare_activity_queue,
 )
 from activitypub_federation_queue_batcher.constants import (
-    HTTP_BATCH_SIZE,
+    MESSAGE_QUEUE_LIMIT,
     RABBITMQ_CHANNEL_ROUTING_KEY,
 )
 from activitypub_federation_queue_batcher.types import SerializableActivitySubmission
@@ -27,8 +27,6 @@ RABBITMQ_CONNECTION_APP_KEY: aiohttp.web.AppKey[
     "RABBITMQ_CONNECTION_APP_KEY",
     aio_pika.abc.AbstractRobustConnection,
 )
-
-MESSAGE_QUEUE_LIMIT = int(os.environ.get("MESSAGE_QUEUE_LIMIT", HTTP_BATCH_SIZE * 2))
 
 
 async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
