@@ -10,6 +10,6 @@ RABBITMQ_CHANNEL_ROUTING_KEY = os.environ.get(
 
 # https://www.w3.org/TR/activitypub/#server-to-server-interactions
 VALID_ACTIVITY_CONTENT_TYPES = {
-    " application/ld+json",
+    "application/ld+json",
     "application/activity+json",
 }
