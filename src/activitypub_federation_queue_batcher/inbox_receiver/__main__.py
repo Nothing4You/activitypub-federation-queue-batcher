@@ -15,6 +15,7 @@ from activitypub_federation_queue_batcher._rmq_helpers import (
 from activitypub_federation_queue_batcher.constants import (
     MESSAGE_QUEUE_LIMIT,
     RABBITMQ_CHANNEL_ROUTING_KEY,
+    VALID_ACTIVITY_CONTENT_TYPES,
 )
 from activitypub_federation_queue_batcher.types import SerializableActivitySubmission
 
@@ -46,6 +47,12 @@ async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
                 queue.declaration_result.message_count,
             )
             return aiohttp.web.HTTPServiceUnavailable()
+
+        if request.content_type not in VALID_ACTIVITY_CONTENT_TYPES:
+            logger.info("Received invalid content-type header %r", request.content_type)
+            return aiohttp.web.HTTPServiceUnavailable(
+                text="Invalid content-type header",
+            )
 
         body = await request.read()
 

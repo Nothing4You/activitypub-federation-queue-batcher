@@ -7,3 +7,9 @@ RABBITMQ_CHANNEL_ROUTING_KEY = os.environ.get(
     "RABBITMQ_CHANNEL_ROUTING_KEY",
     "apub-queue",
 )
+
+# https://www.w3.org/TR/activitypub/#server-to-server-interactions
+VALID_ACTIVITY_CONTENT_TYPES = {
+    " application/ld+json",
+    "application/activity+json",
+}
