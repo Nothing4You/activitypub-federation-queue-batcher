@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from base64 import b64encode
 from datetime import UTC, datetime
 
@@ -15,6 +14,7 @@ from activitypub_federation_queue_batcher._rmq_helpers import (
 from activitypub_federation_queue_batcher.constants import (
     MESSAGE_QUEUE_LIMIT,
     RABBITMQ_CHANNEL_ROUTING_KEY,
+    RABBITMQ_HOSTNAME,
     VALID_ACTIVITY_CONTENT_TYPES,
 )
 from activitypub_federation_queue_batcher.types import SerializableActivitySubmission
@@ -98,7 +98,7 @@ async def init() -> aiohttp.web.Application:
     app = aiohttp.web.Application()
 
     app[RABBITMQ_CONNECTION_APP_KEY] = await aio_pika.connect_robust(
-        host=os.environ.get("RABBITMQ_HOSTNAME", "localhost"),
+        host=RABBITMQ_HOSTNAME,
     )
     await bootstrap(app[RABBITMQ_CONNECTION_APP_KEY])
 

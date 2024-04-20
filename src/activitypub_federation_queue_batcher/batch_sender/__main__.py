@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 import sys
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urlunsplit
@@ -18,17 +17,17 @@ from activitypub_federation_queue_batcher._rmq_helpers import (
     declare_activity_queue,
 )
 from activitypub_federation_queue_batcher.constants import (
+    BATCH_RECEIVER_DOMAIN,
+    BATCH_RECEIVER_PATH,
+    BATCH_RECEIVER_PROTOCOL,
     HTTP_BATCH_MAX_WAIT,
     HTTP_BATCH_SIZE,
+    HTTP_USER_AGENT,
+    RABBITMQ_HOSTNAME,
 )
 from activitypub_federation_queue_batcher.types import (
     SerializableActivitySubmission,
     UpstreamSubmissionResponse,
-)
-
-USER_AGENT = os.environ.get(
-    "HTTP_USER_AGENT",
-    "ActivityPub-Federation-Queue-Batcher (+https://github.com/Nothing4You/activitypub-federation-queue-batcher)",
 )
 
 logger = logging.getLogger(__name__)
@@ -86,23 +85,27 @@ async def requeue_messages(messages: list[AbstractIncomingMessage]) -> None:
 
 
 async def forwarder() -> None:
+    if BATCH_RECEIVER_DOMAIN is None or len(BATCH_RECEIVER_DOMAIN) == 0:
+        logger.error("BATCH_RECEIVER_DOMAIN must be set")
+        sys.exit(1)
+
     rmq = await aio_pika.connect_robust(
-        host=os.environ.get("RABBITMQ_HOSTNAME", "localhost"),
+        host=RABBITMQ_HOSTNAME,
     )
     await bootstrap(rmq)
 
     url = urlunsplit(
         (
-            os.environ.get("BATCH_RECEIVER_PROTOCOL", "https"),
-            os.environ["BATCH_RECEIVER_DOMAIN"],
-            os.environ.get("BATCH_RECEIVER_PATH", "/batch"),
+            BATCH_RECEIVER_PROTOCOL,
+            BATCH_RECEIVER_DOMAIN,
+            BATCH_RECEIVER_PATH,
             "",
             "",
         ),
     )
 
     headers = {
-        "user-agent": USER_AGENT,
+        "user-agent": HTTP_USER_AGENT,
         "content-type": "application/json",
     }
 

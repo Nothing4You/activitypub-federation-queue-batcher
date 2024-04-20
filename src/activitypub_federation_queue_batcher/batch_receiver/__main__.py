@@ -1,5 +1,4 @@
 import logging
-import os
 from base64 import b64decode
 from datetime import UTC, datetime
 from urllib.parse import urlunsplit
@@ -11,6 +10,11 @@ from activitypub_federation_queue_batcher._apub_helpers import (
     is_tolerable_activity_submission_status_code,
 )
 from activitypub_federation_queue_batcher._logging_helpers import setup_logging
+from activitypub_federation_queue_batcher.constants import (
+    BATCH_RECEIVER_PATH,
+    OVERRIDE_DESTINATION_DOMAIN,
+    OVERRIDE_DESTINATION_PROTOCOL,
+)
 from activitypub_federation_queue_batcher.types import (
     SerializableActivitySubmission,
     UpstreamSubmissionResponse,
@@ -35,8 +39,10 @@ async def submit(
 
     url = urlunsplit(
         (
-            os.environ.get("OVERRIDE_DESTINATION_PROTOCOL", "https"),
-            os.environ.get("OVERRIDE_DESTINATION_DOMAIN", req_headers.getone("host")),
+            OVERRIDE_DESTINATION_PROTOCOL,
+            OVERRIDE_DESTINATION_DOMAIN
+            if OVERRIDE_DESTINATION_DOMAIN is not None
+            else req_headers.getone("host"),
             activity.path,
             "",
             "",
@@ -99,7 +105,7 @@ async def init() -> aiohttp.web.Application:
 
     # just handle all paths in the same handler
     app.add_routes(
-        [aiohttp.web.post(os.environ.get("BATCH_RECEIVER_PATH", "/batch"), handler)],
+        [aiohttp.web.post(BATCH_RECEIVER_PATH, handler)],
     )
 
     return app
