@@ -50,22 +50,24 @@ async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
 
         if request.content_type not in VALID_ACTIVITY_CONTENT_TYPES:
             logger.info("Received invalid content-type header %r", request.content_type)
-            return aiohttp.web.HTTPServiceUnavailable(
+            return aiohttp.web.HTTPUnsupportedMediaType(
                 text="Invalid content-type header",
             )
 
         body = await request.read()
 
-        activity_id = None
         try:
             j = json.loads(body)
-            if "id" in j:
-                logger.info("Queueing activity %s", j["id"])
-                activity_id = j["id"]
-            else:
-                logger.warning("Missing activity id in JSON body")
-        except Exception:
-            logger.exception("Unable to parse request body as JSON")
+        except json.JSONDecodeError:
+            logger.info("Received invalid JSON body")
+            return aiohttp.web.HTTPUnsupportedMediaType(text="Body is not JSON")
+
+        activity_id = None
+        if "id" in j:
+            logger.info("Queueing activity %s", j["id"])
+            activity_id = j["id"]
+        else:
+            logger.warning("Missing activity id in JSON body")
 
         serializable_request = SerializableActivitySubmission(
             time=datetime.now(UTC),
