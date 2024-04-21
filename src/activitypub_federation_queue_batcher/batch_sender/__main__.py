@@ -106,12 +106,12 @@ async def forwarder() -> None:
     )
 
     headers = {
-        "user-agent": HTTP_USER_AGENT,
-        "content-type": "application/json",
+        aiohttp.hdrs.USER_AGENT: HTTP_USER_AGENT,
+        aiohttp.hdrs.CONTENT_TYPE: "application/json",
     }
 
     if HTTP_BATCH_AUTHORIZATION is not None:
-        headers["authorization"] = HTTP_BATCH_AUTHORIZATION
+        headers[aiohttp.hdrs.AUTHORIZATION] = HTTP_BATCH_AUTHORIZATION
 
     async with rmq.channel() as channel, aiohttp.ClientSession() as cs:
         await channel.set_qos(prefetch_count=HTTP_BATCH_SIZE)

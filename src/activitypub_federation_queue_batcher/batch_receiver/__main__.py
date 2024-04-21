@@ -43,7 +43,7 @@ async def submit(
             OVERRIDE_DESTINATION_PROTOCOL,
             OVERRIDE_DESTINATION_DOMAIN
             if OVERRIDE_DESTINATION_DOMAIN is not None
-            else req_headers.getone("host"),
+            else req_headers.getone(aiohttp.hdrs.HOST),
             activity.path,
             "",
             "",
@@ -74,7 +74,7 @@ async def submit(
             activity_id=activity.activity_id,
             status=resp.status,
             headers=[[k, v] for k, v in resp.headers.items()],
-            content_type=resp.headers.getone("content-type"),
+            content_type=resp.headers.getone(aiohttp.hdrs.CONTENT_TYPE),
             body=(await resp.text())
             if resp.content_length is not None and resp.content_length > 0
             else None,
@@ -84,7 +84,8 @@ async def submit(
 async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
     if (
         HTTP_BATCH_AUTHORIZATION is not None
-        and request.headers.getone("authorization") != HTTP_BATCH_AUTHORIZATION
+        and request.headers.getone(aiohttp.hdrs.AUTHORIZATION)
+        != HTTP_BATCH_AUTHORIZATION
     ):
         return aiohttp.web.HTTPUnauthorized(text="Missing authorization header")
 

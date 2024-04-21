@@ -74,7 +74,7 @@ async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
         serializable_request = SerializableActivitySubmission(
             time=datetime.now(UTC),
             activity_id=activity_id,
-            host=request.headers.getone("host"),
+            host=request.headers.getone(aiohttp.hdrs.HOST),
             path=request.path,
             headers=[[k, v] for k, v in request.headers.items()],
             b64_body=b64encode(body).decode(),
