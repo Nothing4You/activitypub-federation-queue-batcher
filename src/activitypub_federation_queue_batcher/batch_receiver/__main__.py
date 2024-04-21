@@ -104,9 +104,9 @@ async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
             logger.info("Allowed IPs configured but %r is not allowed", request.remote)
             raise aiohttp.web.HTTPServiceUnavailable(text="Source IP not permitted")
 
-    if (
-        HTTP_BATCH_AUTHORIZATION is not None
-        and request.headers.getone(aiohttp.hdrs.AUTHORIZATION)
+    if HTTP_BATCH_AUTHORIZATION is not None and (
+        aiohttp.hdrs.AUTHORIZATION not in request.headers
+        or request.headers.getone(aiohttp.hdrs.AUTHORIZATION)
         != HTTP_BATCH_AUTHORIZATION
     ):
         return aiohttp.web.HTTPUnauthorized(text="Missing authorization header")
