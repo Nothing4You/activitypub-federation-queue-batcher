@@ -47,3 +47,4 @@ repos:
           - aiohttp>=3.9.4
           - aio-pika>=9.4.1
           - dataclasses-json>=0.6.4
+          - aiohttp-remotes>=1.2.0

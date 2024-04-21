@@ -5,10 +5,12 @@ description = "External ActivityPub federation queue and batching service to dea
 authors = [
     {name = "Richard Schwab", email = "pythonactivitypu-68vz7cab4n@richardschwab.de"},
 ]
+# these should be kept in sync with mypy additional_dependencies in .pre-commit-config.yaml
 dependencies = [
     "aiohttp[speedups]>=3.9.4",
     "aio-pika>=9.4.1",
     "dataclasses-json>=0.6.4",
+    "aiohttp-remotes>=1.2.0",
 ]
 requires-python = ">=3.12"
 readme = "README.md"
@@ -63,6 +65,7 @@ extend-ignore = [
     "EM", # Don't mind duplicate error messages in tracebacks
     "ERA001", # Prone to false positives
     "ISC001", # https://github.com/astral-sh/ruff/issues/8272
+    "UP040", # https://github.com/python/mypy/issues/12155
 ]
 
 [tool.ruff.lint.pylint]

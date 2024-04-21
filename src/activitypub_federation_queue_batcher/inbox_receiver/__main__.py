@@ -5,14 +5,22 @@ from datetime import UTC, datetime
 
 import aio_pika
 import aiohttp.web
+import aiohttp_remotes
 
+from activitypub_federation_queue_batcher._aiohttp_helpers import (
+    ALLOWED_IPS_APP_KEY,
+    is_allowed_ip,
+    parse_trusted_ips,
+)
 from activitypub_federation_queue_batcher._logging_helpers import setup_logging
 from activitypub_federation_queue_batcher._rmq_helpers import (
     bootstrap,
     declare_activity_queue,
 )
 from activitypub_federation_queue_batcher.constants import (
-    MESSAGE_QUEUE_LIMIT,
+    INBOX_RECEIVER_ALLOWED_IPS,
+    INBOX_RECEIVER_MESSAGE_QUEUE_LIMIT,
+    INBOX_RECEIVER_TRUSTED_PROXIES,
     RABBITMQ_CHANNEL_ROUTING_KEY,
     RABBITMQ_HOSTNAME,
     VALID_ACTIVITY_CONTENT_TYPES,
@@ -31,6 +39,18 @@ RABBITMQ_CONNECTION_APP_KEY: aiohttp.web.AppKey[
 
 
 async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
+    if ALLOWED_IPS_APP_KEY in request.app:
+        if request.remote is None:
+            logger.warning("Allowed IPs configured but source IP was None")
+            raise aiohttp.web.HTTPServiceUnavailable
+
+        if not is_allowed_ip(
+            allowed_ips=request.app[ALLOWED_IPS_APP_KEY],
+            client_ip=request.remote,
+        ):
+            logger.info("Allowed IPs configured but %r is not allowed", request.remote)
+            raise aiohttp.web.HTTPServiceUnavailable(text="Source IP not permitted")
+
     async with request.app[RABBITMQ_CONNECTION_APP_KEY].channel(
         on_return_raises=True,
     ) as channel:
@@ -38,7 +58,8 @@ async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
 
         if (
             queue.declaration_result.message_count is not None
-            and queue.declaration_result.message_count >= MESSAGE_QUEUE_LIMIT
+            and queue.declaration_result.message_count
+            >= INBOX_RECEIVER_MESSAGE_QUEUE_LIMIT
         ):
             logger.info(
                 "RabbitMQ has %s messages queued,"
@@ -106,6 +127,17 @@ async def init() -> aiohttp.web.Application:
 
     # just handle all paths in the same handler
     app.add_routes([aiohttp.web.post("/{path:.*}", handler)])
+
+    if INBOX_RECEIVER_TRUSTED_PROXIES is not None:
+        await aiohttp_remotes.setup(
+            app,
+            aiohttp_remotes.XForwardedFiltered(
+                trusted=INBOX_RECEIVER_TRUSTED_PROXIES.split(","),
+            ),
+        )
+
+    if INBOX_RECEIVER_ALLOWED_IPS is not None:
+        app[ALLOWED_IPS_APP_KEY] = parse_trusted_ips(INBOX_RECEIVER_ALLOWED_IPS)
 
     return app
 

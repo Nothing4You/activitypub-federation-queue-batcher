@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:78e9fe8386a991bda8f1ac9272af4db00f2b5a4b9137d24af8bf4e68f186c0b3"
+content_hash = "sha256:f0c057d167e2bb5b1fac954a9b15d50b928225643f9da301700eb78c1ff8c9ab"
 
 [[package]]
 name = "aio-pika"
@@ -66,6 +66,21 @@ files = [
     {file = "aiohttp-3.9.5-cp312-cp312-win32.whl", hash = "sha256:5a7ee16aab26e76add4afc45e8f8206c95d1d75540f1039b84a03c3b3800dd59"},
     {file = "aiohttp-3.9.5-cp312-cp312-win_amd64.whl", hash = "sha256:5ca51eadbd67045396bc92a4345d1790b7301c14d1848feaac1d6a6c9289e888"},
     {file = "aiohttp-3.9.5.tar.gz", hash = "sha256:edea7d15772ceeb29db4aff55e482d4bcfb6ae160ce144f2682de02f6d693551"},
+]
+
+[[package]]
+name = "aiohttp-remotes"
+version = "1.2.0"
+requires_python = ">=3.6"
+summary = "Control remote side information."
+groups = ["default"]
+dependencies = [
+    "aiohttp>=3.8.1",
+    "typing-extensions>=3.7.4",
+]
+files = [
+    {file = "aiohttp_remotes-1.2.0-py3-none-any.whl", hash = "sha256:1bc2b11b285b82fab920cc774b8778128d4666e6f6628d6664dfba705ffda062"},
+    {file = "aiohttp_remotes-1.2.0.tar.gz", hash = "sha256:f95c3a6be5e2de746a85ce9af49ec548da6db8378d7e81bb171ec77b13562a6c"},
 ]
 
 [[package]]

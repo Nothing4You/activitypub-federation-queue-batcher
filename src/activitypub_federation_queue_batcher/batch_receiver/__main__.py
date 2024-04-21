@@ -6,12 +6,19 @@ from urllib.parse import urlunsplit
 import aiohttp.web
 import multidict
 
+from activitypub_federation_queue_batcher._aiohttp_helpers import (
+    ALLOWED_IPS_APP_KEY,
+    is_allowed_ip,
+    parse_trusted_ips,
+)
 from activitypub_federation_queue_batcher._apub_helpers import (
     is_tolerable_activity_submission_status_code,
 )
 from activitypub_federation_queue_batcher._logging_helpers import setup_logging
 from activitypub_federation_queue_batcher.constants import (
+    BATCH_RECEIVER_ALLOWED_IPS,
     BATCH_RECEIVER_PATH,
+    BATCH_RECEIVER_TRUSTED_PROXIES,
     HTTP_BATCH_AUTHORIZATION,
     OVERRIDE_DESTINATION_DOMAIN,
     OVERRIDE_DESTINATION_PROTOCOL,
@@ -20,6 +27,9 @@ from activitypub_federation_queue_batcher.types import (
     SerializableActivitySubmission,
     UpstreamSubmissionResponse,
 )
+
+if BATCH_RECEIVER_TRUSTED_PROXIES is not None:
+    import aiohttp_remotes
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +92,18 @@ async def submit(
 
 
 async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
+    if ALLOWED_IPS_APP_KEY in request.app:
+        if request.remote is None:
+            logger.warning("Allowed IPs configured but source IP was None")
+            raise aiohttp.web.HTTPServiceUnavailable
+
+        if not is_allowed_ip(
+            allowed_ips=request.app[ALLOWED_IPS_APP_KEY],
+            client_ip=request.remote,
+        ):
+            logger.info("Allowed IPs configured but %r is not allowed", request.remote)
+            raise aiohttp.web.HTTPServiceUnavailable(text="Source IP not permitted")
+
     if (
         HTTP_BATCH_AUTHORIZATION is not None
         and request.headers.getone(aiohttp.hdrs.AUTHORIZATION)
@@ -115,6 +137,17 @@ async def init() -> aiohttp.web.Application:
     app.add_routes(
         [aiohttp.web.post(BATCH_RECEIVER_PATH, handler)],
     )
+
+    if BATCH_RECEIVER_TRUSTED_PROXIES is not None:
+        await aiohttp_remotes.setup(
+            app,
+            aiohttp_remotes.XForwardedFiltered(
+                trusted=BATCH_RECEIVER_TRUSTED_PROXIES.split(","),
+            ),
+        )
+
+    if BATCH_RECEIVER_ALLOWED_IPS is not None:
+        app[ALLOWED_IPS_APP_KEY] = parse_trusted_ips(BATCH_RECEIVER_ALLOWED_IPS)
 
     return app
 
