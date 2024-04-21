@@ -62,15 +62,14 @@ async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
             logger.info("Received invalid JSON body")
             return aiohttp.web.HTTPUnsupportedMediaType(text="Body is not JSON")
 
-        activity_id = None
-        if "id" in j:
-            logger.info("Queueing activity %s", j["id"])
-            activity_id = j["id"]
-        else:
+        if "id" not in j:
             logger.warning("Missing activity id in JSON body")
             return aiohttp.web.HTTPServiceUnavailable(
                 text="Missing activity id in JSON body",
             )
+
+        logger.info("Queueing activity %s", j["id"])
+        activity_id = j["id"]
 
         serializable_request = SerializableActivitySubmission(
             time=datetime.now(UTC),
