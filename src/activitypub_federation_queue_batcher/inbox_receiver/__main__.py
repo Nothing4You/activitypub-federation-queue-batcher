@@ -68,6 +68,9 @@ async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
             activity_id = j["id"]
         else:
             logger.warning("Missing activity id in JSON body")
+            return aiohttp.web.HTTPServiceUnavailable(
+                text="Missing activity id in JSON body",
+            )
 
         serializable_request = SerializableActivitySubmission(
             time=datetime.now(UTC),
