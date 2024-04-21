@@ -16,10 +16,10 @@ from activitypub_federation_queue_batcher._apub_helpers import (
 )
 from activitypub_federation_queue_batcher._logging_helpers import setup_logging
 from activitypub_federation_queue_batcher.constants import (
-    BATCH_RECEIVER_ALLOWED_IPS,
     BATCH_RECEIVER_PATH,
-    BATCH_RECEIVER_TRUSTED_PROXIES,
+    HTTP_ALLOWED_IPS,
     HTTP_BATCH_AUTHORIZATION,
+    HTTP_TRUSTED_PROXIES,
     OVERRIDE_DESTINATION_DOMAIN,
     OVERRIDE_DESTINATION_PROTOCOL,
 )
@@ -28,7 +28,7 @@ from activitypub_federation_queue_batcher.types import (
     UpstreamSubmissionResponse,
 )
 
-if BATCH_RECEIVER_TRUSTED_PROXIES is not None:
+if HTTP_TRUSTED_PROXIES is not None:
     import aiohttp_remotes
 
 logger = logging.getLogger(__name__)
@@ -138,16 +138,16 @@ async def init() -> aiohttp.web.Application:
         [aiohttp.web.post(BATCH_RECEIVER_PATH, handler)],
     )
 
-    if BATCH_RECEIVER_TRUSTED_PROXIES is not None:
+    if HTTP_TRUSTED_PROXIES is not None:
         await aiohttp_remotes.setup(
             app,
             aiohttp_remotes.XForwardedFiltered(
-                trusted=BATCH_RECEIVER_TRUSTED_PROXIES.split(","),
+                trusted=HTTP_TRUSTED_PROXIES.split(","),
             ),
         )
 
-    if BATCH_RECEIVER_ALLOWED_IPS is not None:
-        app[ALLOWED_IPS_APP_KEY] = parse_trusted_ips(BATCH_RECEIVER_ALLOWED_IPS)
+    if HTTP_ALLOWED_IPS is not None:
+        app[ALLOWED_IPS_APP_KEY] = parse_trusted_ips(HTTP_ALLOWED_IPS)
 
     return app
 

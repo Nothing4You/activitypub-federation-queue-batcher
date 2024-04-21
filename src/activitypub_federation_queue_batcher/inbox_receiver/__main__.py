@@ -18,9 +18,9 @@ from activitypub_federation_queue_batcher._rmq_helpers import (
     declare_activity_queue,
 )
 from activitypub_federation_queue_batcher.constants import (
-    INBOX_RECEIVER_ALLOWED_IPS,
+    HTTP_ALLOWED_IPS,
+    HTTP_TRUSTED_PROXIES,
     INBOX_RECEIVER_MESSAGE_QUEUE_LIMIT,
-    INBOX_RECEIVER_TRUSTED_PROXIES,
     RABBITMQ_CHANNEL_ROUTING_KEY,
     RABBITMQ_HOSTNAME,
     VALID_ACTIVITY_CONTENT_TYPES,
@@ -128,16 +128,16 @@ async def init() -> aiohttp.web.Application:
     # just handle all paths in the same handler
     app.add_routes([aiohttp.web.post("/{path:.*}", handler)])
 
-    if INBOX_RECEIVER_TRUSTED_PROXIES is not None:
+    if HTTP_TRUSTED_PROXIES is not None:
         await aiohttp_remotes.setup(
             app,
             aiohttp_remotes.XForwardedFiltered(
-                trusted=INBOX_RECEIVER_TRUSTED_PROXIES.split(","),
+                trusted=HTTP_TRUSTED_PROXIES.split(","),
             ),
         )
 
-    if INBOX_RECEIVER_ALLOWED_IPS is not None:
-        app[ALLOWED_IPS_APP_KEY] = parse_trusted_ips(INBOX_RECEIVER_ALLOWED_IPS)
+    if HTTP_ALLOWED_IPS is not None:
+        app[ALLOWED_IPS_APP_KEY] = parse_trusted_ips(HTTP_ALLOWED_IPS)
 
     return app
 
