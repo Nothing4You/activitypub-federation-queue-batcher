@@ -72,3 +72,7 @@ extend-ignore = [
 # Keyword args usually don't cause problems, even if there are many.
 max-args = 20
 max-positional-args = 5
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
