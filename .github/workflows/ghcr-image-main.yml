@@ -58,7 +58,7 @@ jobs:
       - run: echo '${{ steps.meta.outputs }}'
       - run: echo '${{ steps.meta.outputs.tags }}'
       - run: echo '${{ steps.meta.outputs.tags[0] }}'
-      - run: echo '${{ steps.meta.outputs.tags.0 }}'
+      - run: echo '${{ steps.meta.outputs.tags }}'
 
       - name: Build and push Docker image to GHCR
         id: build
