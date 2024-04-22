@@ -55,8 +55,6 @@ jobs:
             # type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=latest,enable=true
 
-      - run: echo '${{ steps.build.outputs.metadata }}'
-
       - name: Generate image cache key
         id: cache-key
         run: |
@@ -75,6 +73,8 @@ jobs:
           push: true
           cache-from: ${{ steps.cache-key.outputs.cache-key }}
           cache-to: ${{ steps.cache-key.outputs.cache-key }}
+
+      - run: echo '${{ steps.build.outputs.metadata }}'
 
   build-and-push-images-with-entrypoint:
     name: Build and publish images with entrypoints for all platforms
