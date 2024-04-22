@@ -64,7 +64,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
           push: true
-          cache-from: ${{ fromJSON(steps.build.outputs.metadata)['image.name'] }}
+          cache-from: >-
+            ${{ fromJSON(steps.build.outputs.metadata)['image.name'] }}
 
       - run: echo '${{ steps.build.outputs.metadata }}'
 
