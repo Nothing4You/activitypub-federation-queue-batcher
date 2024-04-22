@@ -69,7 +69,11 @@ async def submit(
         submission_delay,
     )
 
-    async with cs.post(url, data=b64decode(activity.b64_body)) as resp:
+    async with cs.post(
+        url,
+        data=b64decode(activity.b64_body),
+        headers=req_headers,
+    ) as resp:
         logger.info(
             "Got status %s for activity id %s",
             resp.status,
