@@ -67,8 +67,6 @@ jobs:
           cache-from: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:latest
 
       - run: echo '${{ steps.build.outputs.metadata }}'
-      - run: echo '${{ fromJSON(steps.build.outputs.metadata)['image.name'] }}'
-      - run: echo '${{ fromJSON(steps.build.outputs.metadata)['containerimage.digest'] }}'
 
   build-and-push-images-with-entrypoint:
     name: Build and publish images with entrypoints for all platforms
