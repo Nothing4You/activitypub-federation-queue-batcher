@@ -88,7 +88,7 @@ async def submit(
             activity_id=activity.activity_id,
             status=resp.status,
             headers=[[k, v] for k, v in resp.headers.items()],
-            content_type=resp.headers.getone(aiohttp.hdrs.CONTENT_TYPE),
+            content_type=resp.headers.get(aiohttp.hdrs.CONTENT_TYPE),
             body=(await resp.text())
             if resp.content_length is not None and resp.content_length > 0
             else None,
@@ -109,9 +109,7 @@ async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
             raise aiohttp.web.HTTPServiceUnavailable(text="Source IP not permitted")
 
     if HTTP_BATCH_AUTHORIZATION is not None and (
-        aiohttp.hdrs.AUTHORIZATION not in request.headers
-        or request.headers.getone(aiohttp.hdrs.AUTHORIZATION)
-        != HTTP_BATCH_AUTHORIZATION
+        request.headers.get(aiohttp.hdrs.AUTHORIZATION) != HTTP_BATCH_AUTHORIZATION
     ):
         return aiohttp.web.HTTPUnauthorized(text="Missing authorization header")
 

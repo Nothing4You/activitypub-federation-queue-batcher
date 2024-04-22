@@ -33,5 +33,5 @@ class UpstreamSubmissionResponse(DataClassJsonMixin):
     activity_id: str | None
     status: int
     headers: list[list[str]]
-    content_type: str
+    content_type: str | None
     body: str | None
