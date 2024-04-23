@@ -25,7 +25,7 @@ jobs:
     outputs:
       base-image: >-
         ${{
-          fromJSON(steps.build.outputs.metadata)['image.name']
+          steps.custom-meta.outputs.base-image-name
         }}@${{
           fromJSON(steps.build.outputs.metadata)['containerimage.digest']
         }}
@@ -58,12 +58,12 @@ jobs:
             type=semver,pattern={{version}},event=tag
             type=sha,enable={{is_default_branch}}
 
-      - name: Generate image cache key
-        id: cache-key
+      - name: Extract base image name
+        id: custom-meta
         run: |
-          echo "cache-key=${CACHE_KEY%%:*}:buildcache" >> $GITHUB_OUTPUT
+          echo "base-image-name=${DOCKER_TAG%%:*}" | tee -a $GITHUB_OUTPUT
         env:
-          CACHE_KEY: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          DOCKER_TAG: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
 
       - name: Build and push Docker image to GHCR
         id: build
@@ -74,10 +74,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
           push: true
-          cache-from: ${{ steps.cache-key.outputs.cache-key }}
-          cache-to: ${{ steps.cache-key.outputs.cache-key }}
-
-      - run: echo '${{ steps.build.outputs.metadata }}'
+          cache-from: ${{ steps.custom-meta.outputs.base-image-name }}:buildcache
+          cache-to: ${{ steps.custom-meta.outputs.base-image-name }}:buildcache
 
   build-and-push-images-with-entrypoint:
     name: Build and publish images with entrypoints for all platforms
