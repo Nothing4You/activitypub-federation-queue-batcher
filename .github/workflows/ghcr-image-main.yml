@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - v*
 
 env:
   REGISTRY: ghcr.io
@@ -52,8 +54,9 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}
           tags: |
             # set latest tag for default branch
-            # type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=latest,enable=true
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}},event=tag
+            type=sha,enable={{is_default_branch}}
 
       - name: Generate image cache key
         id: cache-key

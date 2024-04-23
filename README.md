@@ -1,6 +1,6 @@
 # activitypub-federation-queue-batcher
 
-- it is highly recommended to pin specific container digests while there are no versions tagged
+- it is highly recommended to pin specific container tags and not use the `latest` tag
 - you'll probably want to run an instance of inbox-receiver and batch-sender for each sending instance where you need to speed up federation
   - each set will need its own `RABBITMQ_CHANNEL_ROUTING_KEY` defined
 - a single batch-receiver can handle multiple batch senders
