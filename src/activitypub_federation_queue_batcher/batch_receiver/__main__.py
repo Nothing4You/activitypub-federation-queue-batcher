@@ -12,6 +12,7 @@ from activitypub_federation_queue_batcher._aiohttp_helpers import (
     parse_trusted_ips,
 )
 from activitypub_federation_queue_batcher._apub_helpers import (
+    is_permanent_activity_submission_failure,
     is_tolerable_activity_submission_status_code,
 )
 from activitypub_federation_queue_batcher._logging_helpers import setup_logging
@@ -74,25 +75,45 @@ async def submit(
         data=b64decode(activity.b64_body),
         headers=req_headers,
     ) as resp:
-        logger.info(
-            "Got status %s for activity id %s",
-            resp.status,
-            activity.activity_id,
+        body = (
+            await resp.text()
+            if resp.content_length is not None and resp.content_length > 0
+            else None
         )
 
-        if not is_tolerable_activity_submission_status_code(resp.status):
-            resp.raise_for_status()
-
-        return UpstreamSubmissionResponse(
+        usr = UpstreamSubmissionResponse(
             time=datetime.now(UTC),
             activity_id=activity.activity_id,
             status=resp.status,
             headers=[[k, v] for k, v in resp.headers.items()],
             content_type=resp.headers.get(aiohttp.hdrs.CONTENT_TYPE),
-            body=(await resp.text())
-            if resp.content_length is not None and resp.content_length > 0
-            else None,
+            body=body,
         )
+
+        if is_permanent_activity_submission_failure(resp.status):
+            logger.warning(
+                "Got status %s for activity id %s",
+                resp.status,
+                activity.activity_id,
+            )
+            logger.warning(
+                "Activity %s request: %s",
+                activity.activity_id,
+                SerializableActivitySubmission.schema().dumps(activity),
+            )
+            logger.warning(
+                "Activity %s response: %s",
+                activity.activity_id,
+                UpstreamSubmissionResponse.schema().dumps(usr),
+            )
+        else:
+            logger.info(
+                "Got status %s for activity id %s",
+                resp.status,
+                activity.activity_id,
+            )
+
+        return usr
 
 
 async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
@@ -119,10 +140,14 @@ async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
         SerializableActivitySubmission.schema().loads(body, many=True)
     )
 
-    responses = [
-        await submit(request.app[AIOHTTP_CLIENTSESSION], activity)
-        for activity in activities
-    ]
+    responses = []
+
+    for activity in activities:
+        resp = await submit(request.app[AIOHTTP_CLIENTSESSION], activity)
+        responses.append(resp)
+
+        if not is_tolerable_activity_submission_status_code(resp.status):
+            break
 
     return aiohttp.web.json_response(
         text=UpstreamSubmissionResponse.schema().dumps(responses, many=True),

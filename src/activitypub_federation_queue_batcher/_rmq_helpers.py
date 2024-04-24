@@ -1,10 +1,14 @@
+from aio_pika import connect_robust
 from aio_pika.abc import (
     AbstractChannel,
     AbstractQueue,
     AbstractRobustConnection,
 )
 
-from activitypub_federation_queue_batcher.constants import RABBITMQ_CHANNEL_ROUTING_KEY
+from activitypub_federation_queue_batcher.constants import (
+    RABBITMQ_CHANNEL_ROUTING_KEY,
+    RABBITMQ_HOSTNAME,
+)
 
 
 async def declare_activity_queue(
@@ -21,6 +25,12 @@ async def declare_activity_queue(
     )
 
 
-async def bootstrap(connection: AbstractRobustConnection) -> None:
-    async with connection.channel() as channel:
+async def bootstrap_rmq() -> AbstractRobustConnection:
+    rmq = await connect_robust(
+        host=RABBITMQ_HOSTNAME,
+    )
+
+    async with rmq.channel() as channel:
         await declare_activity_queue(channel)
+
+    return rmq

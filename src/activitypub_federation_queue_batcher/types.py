@@ -14,7 +14,7 @@ class SerializableActivitySubmission(DataClassJsonMixin):
             mm_field=fields.DateTime(format="iso"),
         ),
     )
-    activity_id: str | None
+    activity_id: str
     host: str
     path: str
     headers: list[list[str]]
@@ -30,7 +30,7 @@ class UpstreamSubmissionResponse(DataClassJsonMixin):
             mm_field=fields.DateTime(format="iso"),
         ),
     )
-    activity_id: str | None
+    activity_id: str
     status: int
     headers: list[list[str]]
     content_type: str | None

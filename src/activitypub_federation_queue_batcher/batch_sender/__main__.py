@@ -7,13 +7,14 @@ from urllib.parse import urlunsplit
 import aio_pika
 import aiohttp.client
 from aio_pika.abc import AbstractIncomingMessage
+from multidict import istr
 
 from activitypub_federation_queue_batcher._apub_helpers import (
     is_tolerable_activity_submission_status_code,
 )
 from activitypub_federation_queue_batcher._logging_helpers import setup_logging
 from activitypub_federation_queue_batcher._rmq_helpers import (
-    bootstrap,
+    bootstrap_rmq,
     declare_activity_queue,
 )
 from activitypub_federation_queue_batcher.constants import (
@@ -24,7 +25,6 @@ from activitypub_federation_queue_batcher.constants import (
     HTTP_BATCH_MAX_WAIT,
     HTTP_BATCH_SIZE,
     HTTP_USER_AGENT,
-    RABBITMQ_HOSTNAME,
 )
 from activitypub_federation_queue_batcher.types import (
     SerializableActivitySubmission,
@@ -75,6 +75,18 @@ async def get_rmq_messages(
     return messages
 
 
+def get_batch_request_headers() -> dict[istr, str]:
+    headers = {
+        aiohttp.hdrs.USER_AGENT: HTTP_USER_AGENT,
+        aiohttp.hdrs.CONTENT_TYPE: "application/json",
+    }
+
+    if HTTP_BATCH_AUTHORIZATION is not None:
+        headers[aiohttp.hdrs.AUTHORIZATION] = HTTP_BATCH_AUTHORIZATION
+
+    return headers
+
+
 async def requeue_messages(messages: list[AbstractIncomingMessage]) -> None:
     # This ensures that all messages we previously started processing are
     # returned to the queue
@@ -85,15 +97,40 @@ async def requeue_messages(messages: list[AbstractIncomingMessage]) -> None:
     sys.exit(1)
 
 
+def is_acceptable_batch_entry(
+    index: int,
+    activity: SerializableActivitySubmission,
+    response: UpstreamSubmissionResponse,
+) -> bool:
+    if activity.activity_id != response.activity_id:
+        logger.error(
+            "Activity id mismatch at index %s: %s != %s",
+            index,
+            activity.activity_id,
+            response.activity_id,
+        )
+        return False
+
+    if not is_tolerable_activity_submission_status_code(
+        response.status,
+    ):
+        logger.warning(
+            "Activity %s at index %s failed with status code: %s",
+            activity.activity_id,
+            index,
+            response.status,
+        )
+        return False
+
+    return True
+
+
 async def forwarder() -> None:
     if BATCH_RECEIVER_DOMAIN is None or len(BATCH_RECEIVER_DOMAIN) == 0:
         logger.error("BATCH_RECEIVER_DOMAIN must be set")
         sys.exit(1)
 
-    rmq = await aio_pika.connect_robust(
-        host=RABBITMQ_HOSTNAME,
-    )
-    await bootstrap(rmq)
+    rmq = await bootstrap_rmq()
 
     url = urlunsplit(
         (
@@ -105,13 +142,7 @@ async def forwarder() -> None:
         ),
     )
 
-    headers = {
-        aiohttp.hdrs.USER_AGENT: HTTP_USER_AGENT,
-        aiohttp.hdrs.CONTENT_TYPE: "application/json",
-    }
-
-    if HTTP_BATCH_AUTHORIZATION is not None:
-        headers[aiohttp.hdrs.AUTHORIZATION] = HTTP_BATCH_AUTHORIZATION
+    headers = get_batch_request_headers()
 
     async with rmq.channel() as channel, aiohttp.ClientSession() as cs:
         await channel.set_qos(prefetch_count=HTTP_BATCH_SIZE)
@@ -162,17 +193,24 @@ async def forwarder() -> None:
                     len(responses),
                     len(messages),
                 )
-                await requeue_messages(messages)
-            if not all(
-                is_tolerable_activity_submission_status_code(resp.status)
-                for resp in responses
-            ):
-                logger.warning("Batch response contains disallowed status codes")
-                await requeue_messages(messages)
 
+            activities_ok = 0
             async with asyncio.TaskGroup() as tg:
-                for msg in messages:
-                    tg.create_task(msg.ack())
+                for i in range(len(messages)):
+                    try:
+                        if not is_acceptable_batch_entry(
+                            i,
+                            activities[i],
+                            responses[i],
+                        ):
+                            break
+
+                        tg.create_task(msg.ack())
+                    except IndexError:
+                        break
+
+            if activities_ok < len(messages):
+                await requeue_messages(messages[activities_ok:])
 
             logger.info("Finished batch of %s messages", len(messages))
 

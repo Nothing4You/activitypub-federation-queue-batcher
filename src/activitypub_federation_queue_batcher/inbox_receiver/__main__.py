@@ -14,7 +14,7 @@ from activitypub_federation_queue_batcher._aiohttp_helpers import (
 )
 from activitypub_federation_queue_batcher._logging_helpers import setup_logging
 from activitypub_federation_queue_batcher._rmq_helpers import (
-    bootstrap,
+    bootstrap_rmq,
     declare_activity_queue,
 )
 from activitypub_federation_queue_batcher.constants import (
@@ -22,7 +22,6 @@ from activitypub_federation_queue_batcher.constants import (
     HTTP_TRUSTED_PROXIES,
     INBOX_RECEIVER_MESSAGE_QUEUE_LIMIT,
     RABBITMQ_CHANNEL_ROUTING_KEY,
-    RABBITMQ_HOSTNAME,
     VALID_ACTIVITY_CONTENT_TYPES,
 )
 from activitypub_federation_queue_batcher.types import SerializableActivitySubmission
@@ -120,10 +119,7 @@ async def init() -> aiohttp.web.Application:
 
     app = aiohttp.web.Application()
 
-    app[RABBITMQ_CONNECTION_APP_KEY] = await aio_pika.connect_robust(
-        host=RABBITMQ_HOSTNAME,
-    )
-    await bootstrap(app[RABBITMQ_CONNECTION_APP_KEY])
+    app[RABBITMQ_CONNECTION_APP_KEY] = await bootstrap_rmq()
 
     # just handle all paths in the same handler
     app.add_routes([aiohttp.web.post("/{path:.*}", handler)])
