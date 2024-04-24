@@ -205,7 +205,7 @@ async def forwarder() -> None:
                         ):
                             break
 
-                        tg.create_task(msg.ack())
+                        tg.create_task(messages[i].ack())
                     except IndexError:
                         break
 
