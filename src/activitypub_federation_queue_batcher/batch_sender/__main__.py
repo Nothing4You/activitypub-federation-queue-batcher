@@ -206,6 +206,7 @@ async def forwarder() -> None:
                             break
 
                         tg.create_task(messages[i].ack())
+                        activities_ok += 1
                     except IndexError:
                         break
 
