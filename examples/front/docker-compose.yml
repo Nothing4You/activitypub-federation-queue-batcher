@@ -1,0 +1,31 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.13.1-management-alpine@sha256:7632f0bf559e4640f1f532bf10eaac8857d016a383d5e73f46a23db0431e8c8a
+    restart: unless-stopped
+    # we need a persistent hostname ensure rabbitmq keeps using the same storage
+    hostname: rabbitmq
+    ports:
+      - 127.0.0.1:15672:15672 # management web interface
+    volumes:
+      - ./rabbitmq-data:/var/lib/rabbitmq
+
+  inbox-receiver:
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/inbox-receiver:0.2.0
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+    environment:
+      LOGLEVEL: debug
+      RABBITMQ_HOSTNAME: rabbitmq
+      HTTP_TRUSTED_PROXIES: 192.168.65.1
+      HTTP_ALLOWED_IPS: 135.181.143.221
+
+  batch-sender:
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-sender:0.2.0
+    restart: unless-stopped
+    environment:
+      LOGLEVEL: debug
+      RABBITMQ_HOSTNAME: rabbitmq
+      BATCH_RECEIVER_DOMAIN: myinstance.tld
+      # BATCH_RECEIVER_PATH: /batch
+      HTTP_BATCH_AUTHORIZATION: THIS IS A SECRET! CHANGE IT!

@@ -1,0 +1,21 @@
+all:
+  hosts:
+    proxy:
+      ansible_host: my.front.proxy
+      ansible_user: root
+      domain: myinstance.tld
+      upstream: https://myinstance.tld
+      # upstream_tls_name: myinstance.tld
+      # batch_receiver_path: /batch
+      # This must be aligned with your batch-receiver configuration
+      batch_authorization: You really want to change this value
+      batch_instances:
+        lemmy.world:
+          # each instance needs a unique port
+          port: 8000
+          source_ips:
+            # insert the instance IP that you see in your access logs
+            - 10.20.30.40
+            # you can add multiple IPs if the sending instance users more
+            # or your own IP if you want to test delivery
+            - 10.20.30.50

@@ -1,0 +1,101 @@
+# {{ ansible_managed }}
+
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+error_log /var/log/nginx/error.log;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+	worker_connections 768;
+}
+
+http {
+	include /etc/nginx/mime.types;
+	default_type application/octet-stream;
+
+    log_format  main  '[$time_iso8601] "$scheme://$host" $remote_addr "$remote_user" $ssl_protocol/$ssl_cipher "$request" '
+                      '$status $body_bytes_sent $request_time "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for" '
+                      'to: $upstream_addr $upstream_status $upstream_response_length $upstream_response_time $request_id';
+    access_log  /var/log/nginx/access.log  main;
+
+	sendfile on;
+	tcp_nopush on;
+	types_hash_max_size 2048;
+    keepalive_timeout  65;
+    server_tokens off;
+	gzip on;
+
+    ssl_protocols TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:MozSSL:10m;  # about 40000 sessions
+    ssl_session_tickets off;
+
+    proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+
+    resolver 1.1.1.1 1.0.0.1;
+
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        location /.well-known/acme-challenge/ {
+            root /var/www/certbot;
+        }
+
+        location / {
+            return 301 https://$host$request_uri;
+        }
+    }
+
+    # server {
+    #     listen 443 ssl http2 default_server;
+    #     listen [::]:443 ssl http2 default_server;
+    #     ssl_reject_handshake on;
+    # }
+
+    map $request_method:$request_uri:$http_user_agent $upstream {
+        default "{{ upstream }}";
+
+{% for instance, settings in batch_instances.items() %}
+        "~^POST:[^:]*/inbox:Lemmy/.+; \+https://{{ instance | ansible.builtin.regex_escape }}$" "http://127.0.0.1:{{ settings.port }}";
+{% endfor %}
+    }
+
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 ssl http2;
+        server_name {{ domain }};
+
+        ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+        # verify chain of trust of OCSP response using Root CA and Intermediate certs
+        ssl_trusted_certificate /etc/letsencrypt/live/{{ domain }}/chain.pem;
+
+        location / {
+            proxy_pass $upstream;
+            proxy_http_version 1.1;
+
+            proxy_ssl_verify on;
+            proxy_ssl_verify_depth 3;
+            proxy_ssl_server_name on;
+{% if upstream_tls_name is defined %}
+            proxy_ssl_name {{ upstream_tls_name }};
+{% endif %}
+
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header Host {{ upstream_host | default("$host") }};
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Scheme $scheme;
+
+            proxy_pass_header Server;
+        }
+    }
+}

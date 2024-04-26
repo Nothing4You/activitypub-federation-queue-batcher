@@ -1,0 +1,48 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "4"
+
+services:
+  rabbitmq:
+    logging: *default-logging
+    image: rabbitmq:3.13.1-management-alpine@sha256:7632f0bf559e4640f1f532bf10eaac8857d016a383d5e73f46a23db0431e8c8a
+    restart: unless-stopped
+    # we need a persistent hostname ensure rabbitmq keeps using the same storage
+    hostname: rabbitmq
+    ports:
+      - 127.0.0.1:15672:15672  # management web interface
+    volumes:
+      - ./rabbitmq-data:/var/lib/rabbitmq
+
+{% for instance, settings in batch_instances.items() %}
+{% set identifier = (instance | ansible.builtin.hash)[:6] + "-" + (instance | ansible.builtin.regex_replace('[^A-Za-z0-9]', '')) %}
+  {{ ("inbox-receiver-" + identifier) | to_yaml | trim }}:
+    logging: *default-logging
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/inbox-receiver:0.2.0
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:{{ settings.port }}:8080
+    environment:
+      LOGLEVEL: debug
+      RABBITMQ_HOSTNAME: rabbitmq
+      RABBITMQ_CHANNEL_ROUTING_KEY: {{ ("apub-queue-" + identifier) | to_yaml }}
+      HTTP_TRUSTED_PROXIES: 172.16.0.0/12
+{% if settings.source_ips is defined and settings.source_ips | length > 0 %}
+      HTTP_ALLOWED_IPS: {{ settings.source_ips | join(",") | to_yaml }}
+{% endif %}
+
+  {{ ("batch-sender-" + identifier) | to_yaml | trim }}:
+    logging: *default-logging
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-sender:0.2.0
+    restart: unless-stopped
+    environment:
+      LOGLEVEL: debug
+      RABBITMQ_HOSTNAME: rabbitmq
+      RABBITMQ_CHANNEL_ROUTING_KEY: {{ ("apub-queue-" + identifier) | to_yaml }}
+      BATCH_RECEIVER_PROTOCOL: https
+      BATCH_RECEIVER_DOMAIN: {{ batch_receiver_domain | default(domain) | to_yaml }}
+      BATCH_RECEIVER_PATH: {{ batch_receiver_path | default("/batch") | to_yaml }}
+      HTTP_BATCH_AUTHORIZATION: {{ batch_authorization | to_yaml }}
+{% endfor %}
