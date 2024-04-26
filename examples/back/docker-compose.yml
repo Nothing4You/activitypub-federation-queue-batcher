@@ -1,0 +1,16 @@
+services:
+  batch-receiver:
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-receiver:0.2.0
+    restart: unless-stopped
+    environment:
+      LOGLEVEL: debug
+      # BATCH_RECEIVER_PATH: /batch
+      # Avoid going directly to lemmy, put a reverse proxy inbetween.
+      # See #18 for reference.
+      # By default, the host header of the batched request will be used over https.
+      # OVERRIDE_DESTINATION_PROTOCOL: http
+      # OVERRIDE_DESTINATION_DOMAIN: proxy:1234
+      HTTP_BATCH_AUTHORIZATION: THIS IS A SECRET! CHANGE IT
+      # Docker default networks are within 172.16.0.0/12
+      # HTTP_TRUSTED_PROXIES: 172.16.0.0/12
+      # HTTP_ALLOWED_IPS: 10.20.30.40
