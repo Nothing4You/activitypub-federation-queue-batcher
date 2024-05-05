@@ -37,7 +37,7 @@
           - apt-transport-https
         cache_valid_time: 86400
 
-    - name: /etc/apt/keyrings/
+    - name: Create /etc/apt/keyrings/
       ansible.builtin.file:
         path: /etc/apt/keyrings/
         state: directory
