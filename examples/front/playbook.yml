@@ -37,6 +37,12 @@
           - apt-transport-https
         cache_valid_time: 86400
 
+    - name: /etc/apt/keyrings/
+      ansible.builtin.file:
+        path: /etc/apt/keyrings/
+        state: directory
+        mode: "0755"
+
     - name: Download Docker GPG Key
       ansible.builtin.get_url:
         url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
