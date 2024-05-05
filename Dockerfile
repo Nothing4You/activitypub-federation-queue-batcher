@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm@sha256:541d45d3d675fb8197f534525a671e2f8d66c882b89491f9dda271f4f94dcd06 AS builder
+FROM python:3.12-slim-bookworm@sha256:2be8daddbb82756f7d1f2c7ece706aadcb284bf6ab6d769ea695cc3ed6016743 AS builder
 
 RUN pip install -U pip setuptools wheel
 RUN pip install pdm
@@ -14,7 +14,7 @@ COPY src/ /project/src
 RUN pdm sync --prod --no-editable
 
 
-FROM python:3.12-slim-bookworm@sha256:541d45d3d675fb8197f534525a671e2f8d66c882b89491f9dda271f4f94dcd06
+FROM python:3.12-slim-bookworm@sha256:2be8daddbb82756f7d1f2c7ece706aadcb284bf6ab6d769ea695cc3ed6016743
 
 ARG UID=18311
 
