@@ -43,5 +43,5 @@ services:
       OVERRIDE_DESTINATION_DOMAIN: nginx
 
   nginx:
-    image: nginx@sha256:ed6d2c43c8fbcd3eaa44c9dab6d94cb346234476230dc1681227aa72d07181ee
+    image: nginx@sha256:dff52faf7d265f2822935e8dd9ab72764763b4e716f194fb6510ba87552d6d06
     restart: unless-stopped
