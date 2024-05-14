@@ -157,7 +157,10 @@ async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
 async def init() -> aiohttp.web.Application:
     setup_logging()
 
-    app = aiohttp.web.Application()
+    app = aiohttp.web.Application(
+        # set body size limit to 20MB to allow processing large batches
+        client_max_size=20 * (1024**2),
+    )
     app[AIOHTTP_CLIENTSESSION] = aiohttp.ClientSession()
 
     # just handle all paths in the same handler
