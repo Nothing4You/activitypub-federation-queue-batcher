@@ -20,7 +20,7 @@ services:
 {% set identifier = (instance | ansible.builtin.hash)[:6] + "-" + (instance | ansible.builtin.regex_replace('[^A-Za-z0-9]', '')) %}
   {{ ("inbox-receiver-" + identifier) | to_yaml | trim }}:
     logging: *default-logging
-    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/inbox-receiver:0.2.0
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/inbox-receiver:0.2.1
     restart: unless-stopped
     ports:
       - 127.0.0.1:{{ settings.port }}:8080
@@ -35,7 +35,7 @@ services:
 
   {{ ("batch-sender-" + identifier) | to_yaml | trim }}:
     logging: *default-logging
-    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-sender:0.2.0
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-sender:0.2.1
     restart: unless-stopped
     environment:
       LOGLEVEL: debug

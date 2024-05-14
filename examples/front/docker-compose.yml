@@ -10,7 +10,7 @@ services:
       - ./rabbitmq-data:/var/lib/rabbitmq
 
   inbox-receiver:
-    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/inbox-receiver:0.2.0
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/inbox-receiver:0.2.1
     restart: unless-stopped
     ports:
       - 8080:8080
@@ -21,7 +21,7 @@ services:
       HTTP_ALLOWED_IPS: 135.181.143.221
 
   batch-sender:
-    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-sender:0.2.0
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-sender:0.2.1
     restart: unless-stopped
     environment:
       LOGLEVEL: debug

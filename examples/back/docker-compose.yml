@@ -1,6 +1,6 @@
 services:
   batch-receiver:
-    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-receiver:0.2.0
+    image: ghcr.io/nothing4you/activitypub-federation-queue-batcher/batch-receiver:0.2.1
     restart: unless-stopped
     environment:
       LOGLEVEL: debug
