@@ -9,6 +9,7 @@ ActivityPub sends activities one at a time, and some software (such as Lemmy) wi
 ## Prerequisites
 
 In order to deploy this, you will need a few things:
+
 - Direct server access to your ActivityPub instance server (e.g. your Lemmy server VPS). We will refer to this as your 'Lemmy server'. In theory, it can be any ActivityPub instance, but it has only been tested with Lemmy.
 - A second VPS close to the instance you are having trouble with (Such as a server in Helsinki, Finland for Lemmy.world). We will refer to this as 'your VPS'.
 - Access to someone running the instance you are having trouble with, so they can redirect their traffic to your VPS (e.g. with a hosts file entry).
@@ -30,6 +31,7 @@ Make sure you update the secret to a long random string, then start this contain
 Next, to send content to the batcher, we will update the Lemmy reverse proxy to send any requests to `/batch` to the batch-receiver.
 
 In the `nginx.conf` file, add the following snippet in the server section if running in the same stack as Lemmy:
+
 ```
 set $batch "batch-receiver:8080";
 location = /batch {
@@ -38,6 +40,7 @@ location = /batch {
 ```
 
 Or swap the service name for the container name if running in a separate stack, similar to the following. Make sure you have given the batch-receive access to the network that Lemmy's nginx runs on.
+
 ```
 set $batch "batcher-batch-receiver-1:8080";
 location = /batch {
@@ -50,7 +53,6 @@ Restart nginx and try accessing https://yourlemmyinstance.com/batch. You should 
 If you receive a 405, the batch-receiver is ready.
 
 ## Run the ansible playbook on the VPS
-
 
 The next step is to run the ansible playbook on the VPS. Be careful if there is already something on the VPS, it may make more sense to do it manually. These instructions assume your local device is running Linux.
 
@@ -75,9 +77,10 @@ Before you run the playbook, we need to sort out the TLS certificate, as the rem
 
 ### Option 2: Cloudflare
 
-To have certbot use the DNS challenge (since your domain doesn't actually point at the extra VPS), log in to your Cloudflare dashboard and create an API token with `Zone:DNS:Edit` permission for the zone you need a certificate for. We will use the certbot Cloudflare plugin, documentation for this is [here](https://certbot-dns-cloudflare.readthedocs.io/en/stable/#credentials). 
+To have certbot use the DNS challenge (since your domain doesn't actually point at the extra VPS), log in to your Cloudflare dashboard and create an API token with `Zone:DNS:Edit` permission for the zone you need a certificate for. We will use the certbot Cloudflare plugin, documentation for this is [here](https://certbot-dns-cloudflare.readthedocs.io/en/stable/#credentials).
 
 On your local machine create a file `cloudflare.ini` and add the token in the following format:
+
 ```
 # Cloudflare API token used by Certbot
 dns_cloudflare_api_token = [token generated in Cloudflare dashboard]
@@ -109,8 +112,7 @@ Once everything is set up, get in contact with someone with server access to the
 
 This should start sending traffic to the batcher, and everything should flow through to Lemmy.
 
-Watch the batch-receiver logs to make sure everything is looking ok. 
-
+Watch the batch-receiver logs to make sure everything is looking ok.
 
 # Notes
 
@@ -131,13 +133,16 @@ Watch the batch-receiver logs to make sure everything is looking ok.
 If you get an nginx error along the lines of `no resolver defined to resolve batcher-batch-receiver-1` then you can update the nginx configuration on your Lemmy server to remove the variable.
 
 Change:
+
 ```
 set $batch "batch-receiver:8080";
 location = /batch {
     proxy_pass "http://$batch";
 }
 ```
+
 To:
+
 ```
 location = /batch {
     proxy_pass "http://batch-receiver:8080";
@@ -150,7 +155,7 @@ If you get an error about a missing API key or missing email address when you ar
 
 ## Error about docker when running ansible playbook
 
-When running the ansible playbook, you might get an error `ERROR! couldn't resolve module/action 'community.docker.docker_compose_v2`. 
+When running the ansible playbook, you might get an error `ERROR! couldn't resolve module/action 'community.docker.docker_compose_v2`.
 
 On your local machine, run:
 
