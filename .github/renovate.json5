@@ -13,7 +13,7 @@
     },
     {
       description: "Ignore unpinned dev images",
-      matchFileNames: ["package.json"],
+      matchFileNames: ["docker-compose.yml"],
       excludePackageNames: ["nginx"],
     },
   ],
