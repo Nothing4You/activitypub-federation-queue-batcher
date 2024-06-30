@@ -11,5 +11,10 @@
       matchUpdateTypes: ["digest"],
       schedule: ["every 7 days"],
     },
+    {
+      description: "Ignore unpinned dev images",
+      matchFileNames: ["package.json"],
+      excludePackageNames: ["nginx"],
+    },
   ],
 }
