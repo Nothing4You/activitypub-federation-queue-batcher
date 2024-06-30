@@ -10,11 +10,13 @@
       description: "Schedule digest updates weekly",
       matchUpdateTypes: ["digest"],
       schedule: ["every 7 days"],
+      excludePackageNames: ["nginx"],
     },
     {
       description: "Ignore unpinned dev images",
+      enabled: false,
       matchFileNames: ["docker-compose.yml"],
-      excludePackageNames: ["nginx"],
+      matchPackageNames: ["nginx"],
     },
   ],
 }
