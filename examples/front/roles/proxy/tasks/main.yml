@@ -8,7 +8,16 @@
       - python3-certbot-nginx
     cache_valid_time: 86400
 
-- name: Request initial letsencrypt certificate
+- name: Determine certbot validation mode
+  ansible.builtin.set_fact:
+    proxy_certbot_validation_mode: >-
+      {{
+        certbot_cloudflare_api_key is defined | ternary("cloudflare",
+          "nginx"
+        )
+      }}
+
+- name: Request initial letsencrypt certificate with HTTP validation
   ansible.builtin.command:
     argv:
       - certbot
@@ -22,6 +31,35 @@
       - --register-unsafely-without-email
   args:
     creates: "/etc/letsencrypt/live/{{ domain }}/privkey.pem"
+  when: proxy_certbot_validation_mode == "nginx"
+
+- name: Prepare certifiate with Cloudflare validation
+  when: proxy_certbot_validation_mode == "cloudflare"
+  block:
+    - name: Copy Cloudflare API credentials
+      ansible.builtin.template:
+        src: cloudflare.ini.j2
+        dest: /etc/letsencrypt/cloudflare.ini
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Request initial letsencrypt certificate with Cloudflare validation
+      ansible.builtin.command:
+        argv:
+          - certbot
+          - certonly
+          - --dns-cloudflare
+          - --dns-cloudflare-credentials
+          - /etc/letsencrypt/cloudflare.ini
+          - --agree-tos
+          - --cert-name
+          - "{{ domain }}"
+          - -d
+          - "{{ domain }}"
+          - --register-unsafely-without-email
+      args:
+        creates: "/etc/letsencrypt/live/{{ domain }}/privkey.pem"
 
 - name: Distribute nginx configuration
   ansible.builtin.template:
@@ -34,9 +72,29 @@
   diff: true
   notify: Reload nginx.service
 
-- name: Certbot renewal cronjob
+- name: Set up certbot renewal cronjob with HTTP validation
   ansible.builtin.cron:
     special_time: daily
     name: certbot-renew
     user: root
-    job: "certbot certonly --nginx --cert-name '{{ domain }}' -d '{{ domain }}' --deploy-hook 'systemctl reload nginx.service'"
+    job: >-
+      certbot certonly
+      --nginx
+      --cert-name '{{ domain }}'
+      -d '{{ domain }}'
+      --deploy-hook 'systemctl reload nginx.service'
+  when: proxy_certbot_validation_mode == "nginx"
+
+- name: Certbot renewal cronjob with Cloudflare validation
+  ansible.builtin.cron:
+    special_time: daily
+    name: certbot-renew
+    user: root
+    job: >-
+      certbot certonly
+      --dns-cloudflare
+      --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini
+      --cert-name '{{ domain }}'
+      -d '{{ domain }}'
+      --deploy-hook 'systemctl reload nginx.service'
+  when: proxy_certbot_validation_mode == "cloudflare"

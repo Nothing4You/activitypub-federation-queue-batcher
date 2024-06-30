@@ -6,6 +6,12 @@ all:
       domain: myinstance.tld
       upstream: https://myinstance.tld
       # upstream_tls_name: myinstance.tld
+
+      # Uncomment this variable and provide your API token if you want to use
+      # to use DNS validation via Cloudflare to obtain a trusted certificate.
+      # https://certbot-dns-cloudflare.readthedocs.io/en/stable/#credentials
+      # certbot_cloudflare_api_key: 0123456789abcdef0123456789abcdef01234567
+
       # batch_receiver_path: /batch
       # This must be aligned with your batch-receiver configuration
       batch_authorization: You really want to change this value
