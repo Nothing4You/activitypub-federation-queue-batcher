@@ -1,0 +1,71 @@
+---
+- name: Install dependencies
+  ansible.builtin.apt:
+    name:
+      - curl
+      - gnupg
+      - apt-transport-https
+    cache_valid_time: 86400
+
+- name: Create /etc/apt/keyrings/
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/
+    state: directory
+    mode: "0755"
+
+- name: Download Docker GPG Key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    checksum: sha256:1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570
+    mode: "0644"
+
+- name: Get architecture using dpkg
+  ansible.builtin.command: dpkg --print-architecture
+  register: dpkg_output
+  changed_when: false
+
+- name: Add Docker apt repo
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ dpkg_output.stdout }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
+    filename: /etc/apt/sources.list.d/docker.list
+
+- name: Install packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    cache_valid_time: 86400
+
+- name: Enable and start docker service
+  ansible.builtin.systemd:
+    name: docker.service
+    enabled: true
+    state: started
+
+- name: Create folder /opt/apub-queue-batcher
+  ansible.builtin.file:
+    path: /opt/apub-queue-batcher/
+    owner: root
+    mode: "0755"
+    state: directory
+
+- name: Distribute docker-compose configuration
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/apub-queue-batcher/docker-compose.yml
+    owner: root
+    group: root
+    mode: "0644"
+  diff: true
+
+- name: Start docker-compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/apub-queue-batcher/
+    state: present
+    pull: always
+    remove_orphans: true
