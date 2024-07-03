@@ -6,6 +6,7 @@
       - ca-certificates
       - certbot
       - python3-certbot-nginx
+      - python3-certbot-dns-cloudflare
     cache_valid_time: 86400
 
 - name: Determine certbot validation mode
