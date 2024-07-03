@@ -36,6 +36,12 @@
 - name: Prepare certifiate with Cloudflare validation
   when: proxy_certbot_validation_mode == "cloudflare"
   block:
+    - name: Install cloudflare dns certbot package
+      ansible.builtin.apt:
+        name:
+          - python3-certbot-dns-cloudflare
+        cache_valid_time: 86400
+
     - name: Copy Cloudflare API credentials
       ansible.builtin.template:
         src: cloudflare.ini.j2

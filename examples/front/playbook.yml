@@ -23,5 +23,7 @@
       ansible.builtin.setup:
 
   roles:
-    - batcher
-    - proxy
+    - name: batcher
+      tags: batcher
+    - name: proxy
+      tags: proxy
