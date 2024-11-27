@@ -36,7 +36,7 @@ jobs:
           DOCKER_TAG: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
 
       - name: Build base images
-        uses: docker/build-push-action@5176d81f87c23d6fc96624dfdbcd9f3830bbe445 # v6.5.0
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         with:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
