@@ -97,10 +97,6 @@
     name: certbot-renew
     user: root
     job: >-
-      certbot certonly
-      --dns-cloudflare
-      --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini
-      --cert-name '{{ domain }}'
-      -d '{{ domain }}'
+      certbot renew
       --deploy-hook 'systemctl reload nginx.service'
   when: proxy_certbot_validation_mode == "cloudflare"
