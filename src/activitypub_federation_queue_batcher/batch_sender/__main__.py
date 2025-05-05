@@ -42,9 +42,8 @@ async def get_rmq_messages(
     max_wait_until = None
 
     messages: list[AbstractIncomingMessage] = []
-    while (
-        len(messages) == 0
-        or len(messages) < limit
+    while len(messages) == 0 or (
+        len(messages) < limit
         and max_wait_until is not None
         and datetime.now(UTC) < max_wait_until
     ):
