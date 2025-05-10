@@ -2,7 +2,7 @@
 
 services:
   rabbitmq:
-    image: rabbitmq:3.13.3-management-alpine@sha256:45b2e137b64baeff1f7f4230588be8f1a08b16939a4b64f5da57c59e5dcd3282
+    image: rabbitmq:3.13.6-management-alpine@sha256:611107e29cce05c2acd968325d5dcbde7e2fee404970f1ead75fdb22be2821b3
     restart: unless-stopped
     # we need a persistent hostname ensure rabbitmq keeps using the same storage
     hostname: rabbitmq
