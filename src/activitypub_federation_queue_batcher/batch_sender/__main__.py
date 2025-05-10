@@ -51,8 +51,7 @@ async def get_rmq_messages(
         consume_timeout = (
             None
             if max_wait_until is None
-            # TODO: Check if this is a known mypy issue, otherwise raise with them
-            else (max_wait_until - datetime.now(UTC)).total_seconds()  # type: ignore[operator]
+            else (max_wait_until - datetime.now(UTC)).total_seconds()
         )
 
         # We want to get up to `limit` messages instead of just taking as many as we
