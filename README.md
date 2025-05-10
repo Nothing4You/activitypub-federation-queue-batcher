@@ -1,5 +1,8 @@
 # activitypub-federation-queue-batcher
 
+> [!WARNING]
+> This project is no longer maintained as Lemmy now has the option to enable parallel sending for instances generating a lot of activities.
+
 This application collects activities from an ActivityPub server and forwards them in batches to your own ActivityPub server, where they're getting split back into individual requests to conform to the ActivityPub protocol.
 
 ## Why?
