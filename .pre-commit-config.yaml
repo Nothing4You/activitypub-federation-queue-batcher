@@ -29,7 +29,7 @@ repos:
         additional_dependencies:
           - prettier@3.5.3
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.4
+    rev: v0.11.9
     hooks:
       # Run the linter.
       - id: ruff

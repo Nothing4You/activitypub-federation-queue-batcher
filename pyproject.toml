@@ -57,10 +57,6 @@ extend-ignore = [
     "TD002", # TODOs do not need to be assigned to someone
     "TD003", # TODOs do not need an issue linked
 
-    # Deprecated rules
-    "ANN101",
-    "ANN102",
-
     # Other ignores
     "EM", # Don't mind duplicate error messages in tracebacks
     "ERA001", # Prone to false positives

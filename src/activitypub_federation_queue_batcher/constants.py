@@ -14,8 +14,8 @@ if (
     HTTP_BATCH_AUTHORIZATION = f"Bearer {HTTP_BATCH_AUTHORIZATION}"
 
 HTTP_ALLOWED_IPS = os.environ.get("HTTP_ALLOWED_IPS")
-HTTP_BATCH_MAX_WAIT = int(os.environ.get("HTTP_BATCH_MAX_WAIT", 3))
-HTTP_BATCH_SIZE = int(os.environ.get("HTTP_BATCH_SIZE", 100))
+HTTP_BATCH_MAX_WAIT = int(os.environ.get("HTTP_BATCH_MAX_WAIT", "3"))
+HTTP_BATCH_SIZE = int(os.environ.get("HTTP_BATCH_SIZE", "100"))
 HTTP_TRUSTED_PROXIES = os.environ.get("HTTP_TRUSTED_PROXIES")
 HTTP_USER_AGENT = os.environ.get(
     "HTTP_USER_AGENT",
