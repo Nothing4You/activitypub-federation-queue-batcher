@@ -2,18 +2,18 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
   - repo: https://github.com/pdm-project/pdm
-    rev: 2.17.1
+    rev: 2.24.1
     hooks:
       - id: pdm-lock-check
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.16.0
+    rev: v3.19.1
     hooks:
       - id: pyupgrade
         args:
@@ -27,7 +27,7 @@ repos:
         args: [--write, --ignore-unknown]
         types: [file]
         additional_dependencies:
-          - prettier@3.3.3
+          - prettier@3.5.3
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.5.4
     hooks:
@@ -39,11 +39,11 @@ repos:
       # Run the formatter.
       - id: ruff-format
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.11.0" # Use the sha / tag you want to point at
+    rev: "v1.11.0"
     hooks:
       - id: mypy
         additional_dependencies:
-          - aiohttp>=3.9.4
-          - aio-pika>=9.4.1
-          - dataclasses-json>=0.6.4
-          - aiohttp-remotes>=1.2.0
+          - aiohttp>=3.11.18
+          - aio-pika>=9.5.5
+          - dataclasses-json>=0.6.7
+          - aiohttp-remotes>=1.3.0
